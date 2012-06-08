@@ -1,0 +1,43 @@
+@import "../reindeer/styles.css";
+
+/*                                 Application                                */
+.v-app-Aeskulab {
+	background: url('./img/ui/bg.png');
+}
+
+/*                                    Menu                                    */
+.a-topbar {
+	background: #2e3436 url('./img/ui/topBar.png') repeat-x;
+}
+
+.a-menucomponent {
+	color: #ffffff;
+}
+
+.a-menucomponent:hover {
+	background: #555753;
+}
+
+.a-menucomponent.a-menucomponent-active {
+	background: #e2001a;
+}
+
+/*                                  MainMenu                                  */
+.a-listcomponent {
+	background: #ffffff;
+	font-weight: bold;
+}
+
+.a-listcomponent-image {
+	background: #1e2022;
+}
+
+.a-listcomponent:hover {
+	background: #1e2022;
+	color: #ffffff;
+}
+
+/*                                   Fixes                                    */
+.v-upload-immediate .v-button {
+	width: 100%;
+}
