@@ -3,6 +3,7 @@ package de.gianfelice.aeskulab.ui;
 import com.vaadin.ui.VerticalLayout;
 
 import de.gianfelice.aeskulab.ui.tabs.Tab;
+import de.gianfelice.aeskulab.ui.tabs.TabMainMenu;
 import de.gianfelice.aeskulab.ui.tabs.TabMap;
 import de.gianfelice.aeskulab.ui.top.TopBar;
 
@@ -54,9 +55,10 @@ public class MainLayout extends VerticalLayout {
 	@Override
 	public void attach() {
 		super.attach();
+
+		setContentTab(new TabMainMenu());
 		
 		// TODO: Temporary
-		// setContentTab(new TabMainMenu());
 		setContentTab(new TabMap());
 	}
 

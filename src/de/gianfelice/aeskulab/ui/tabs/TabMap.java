@@ -5,10 +5,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 
 import javax.imageio.ImageIO;
 
+import com.github.wolfie.refresher.Refresher;
+import com.github.wolfie.refresher.Refresher.RefreshListener;
 import com.vaadin.Application;
 import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
@@ -89,12 +93,16 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 	/** Map. */
 	private Embedded map;
 	
+	/** Date format for clock. */
+	private SimpleDateFormat format;
+	
 	// ------------------------------- Method(s) -------------------------------
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public ComponentContainer getContentContainer() {
+		format = new SimpleDateFormat("HH:mm:ss");
 		horPanel = new HorizontalSplitPanel();
 		horPanel.setSplitPosition(70);
 		VerticalLayout verLayout = new VerticalLayout();
@@ -147,6 +155,23 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 		horToolbar.addComponent(btnCancel);
 		horToolbar.setComponentAlignment(btnCancel, Alignment.MIDDLE_LEFT);
 		horToolbar.setExpandRatio(btnCancel, 1.0f);
+		
+		final Label lblClock = new Label(format.format(new Date()));
+		lblClock.setStyleName(Reindeer.LABEL_H2);
+		lblClock.setSizeUndefined();
+		Refresher ref = new Refresher();
+		ref.setRefreshInterval(1000);
+		ref.addListener(new RefreshListener() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void refresh(Refresher source) {
+				lblClock.setValue(format.format(new Date()));
+			}
+		});
+		horToolbar.addComponent(lblClock);
+		// TODO: Temporary
+		// horToolbar.addComponent(ref);
 		
 		map = new Embedded();
 		ddAbsMap.addComponent(map);
