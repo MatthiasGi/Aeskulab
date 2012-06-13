@@ -17,17 +17,28 @@ import de.gianfelice.aeskulab.ui.components.ComPlace;
 import de.gianfelice.aeskulab.ui.components.ComPlace.DDGrid;
 import de.gianfelice.aeskulab.ui.components.Unit;
 
-import fi.jasoft.dragdroplayouts.DDAbsoluteLayout;
 import fi.jasoft.dragdroplayouts.events.LayoutBoundTransferable;
 
-// TODO: Temporary
-@SuppressWarnings("javadoc")
+/**
+ * A {@link DropHandler} that removes the dropped items from their source.
+ * 
+ * @author  Matthias Gianfelice
+ * @version 0.1.0
+ */
 public class RemoveHandler implements DropHandler {
 
+	// ------------------------------ Attribute(s) -----------------------------
+	/** The default serial version id. */
 	private static final long serialVersionUID = 1L;
-
+	
+	// ------------------------------- Method(s) -------------------------------
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void drop(DragAndDropEvent event) {
+		
+		// Collect information
 		LayoutBoundTransferable trans = (LayoutBoundTransferable)
 				event.getTransferable();
 		Component com = trans.getComponent();
@@ -35,7 +46,10 @@ public class RemoveHandler implements DropHandler {
 		if (!(source instanceof ComponentContainer)) return;
 		if (!(com instanceof Unit || com instanceof ComPlace)) return;
 		((ComponentContainer) source).removeComponent(com);
+		
 		if (source instanceof DDGrid) {
+			
+			// Out of ComPlace?
 			DDGrid grid = (DDGrid) source;
 			grid.recalculateLayout();
 			Place p = grid.getPlace();
@@ -47,7 +61,10 @@ public class RemoveHandler implements DropHandler {
 			} else if (o instanceof Helper) {
 				p.removeHelper((Helper) o);
 			}
+			
 		} else if (com instanceof Unit) {
+			
+			// A unit?
 			Object o = ((Unit) com).getEntity();
 			if (o instanceof Squad) {
 				((Squad) o).setLeft(null);
@@ -59,16 +76,24 @@ public class RemoveHandler implements DropHandler {
 				((Helper) o).setLeft(null);
 				((Helper) o).setTop(null);
 			} 
+			
 		} else if (com instanceof ComPlace) {
+			
+			// A ComPlace itself?
 			Place p = ((ComPlace) com).getPlace();
 			p.setSquads(new ArrayList<Squad>());
 			p.setVehicles(new ArrayList<Vehicle>());
 			p.setHelpers(new ArrayList<Helper>());
 			p.setLeft(null);
 			p.setTop(null);
+
 		}
+
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public AcceptCriterion getAcceptCriterion() {
 		return AcceptAll.get();

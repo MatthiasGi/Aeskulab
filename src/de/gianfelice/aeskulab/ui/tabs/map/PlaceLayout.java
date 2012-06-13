@@ -11,15 +11,42 @@ import com.vaadin.terminal.Resource;
 import de.gianfelice.aeskulab.data.container.PlaceContainer;
 import de.gianfelice.aeskulab.data.entities.Place;
 import de.gianfelice.aeskulab.ui.components.UnitList;
+import de.gianfelice.aeskulab.ui.tabs.TabMap;
 import fi.jasoft.dragdroplayouts.DDVerticalLayout;
 import fi.jasoft.dragdroplayouts.client.ui.LayoutDragMode;
 
-// TODO: Temporary
-@SuppressWarnings("javadoc")
+/**
+ * A sidebar that contains all places.
+ * 
+ * @author  Matthias Gianfelice
+ * @version 0.1.0
+ * @see     Place
+ * @see     UnitList
+ */
 public class PlaceLayout extends DDVerticalLayout {
 
+	// ------------------------------ Attribute(s) -----------------------------
+	/** The default serial version id. */
 	private static final long serialVersionUID = 1L;
 	
+	/** The parent tab for update-events. */
+	private TabMap tab;
+	
+	// ----------------------------- Constructor(s) ----------------------------
+	/**
+	 * Creates the component and sets the parent tab.
+	 * 
+	 * @param tab The parent tab
+	 */
+	public PlaceLayout(TabMap tab) {
+		this.tab = tab;
+	}
+	
+	// ------------------------------- Method(s) -------------------------------
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public void attach() {
 		super.attach();
 		
@@ -30,7 +57,7 @@ public class PlaceLayout extends DDVerticalLayout {
 			Place p = con.getItem(id).getBean();
 			if (p == null) continue;
 
-			UnitList u = new UnitList(p);
+			UnitList u = new UnitList(tab, p);
 			File file = p.getImage();
 			Resource res = null;
 			if (file == null) {
@@ -45,7 +72,6 @@ public class PlaceLayout extends DDVerticalLayout {
 		
 		setDragMode(LayoutDragMode.CLONE);
 		setDropHandler(new RemoveHandler());
-
 	}
 
 }

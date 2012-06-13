@@ -11,15 +11,42 @@ import com.vaadin.terminal.Resource;
 import de.gianfelice.aeskulab.data.container.VehicleContainer;
 import de.gianfelice.aeskulab.data.entities.Vehicle;
 import de.gianfelice.aeskulab.ui.components.UnitList;
+import de.gianfelice.aeskulab.ui.tabs.TabMap;
 import fi.jasoft.dragdroplayouts.DDVerticalLayout;
 import fi.jasoft.dragdroplayouts.client.ui.LayoutDragMode;
 
-// TODO: Temporary
-@SuppressWarnings("javadoc")
+/**
+ * A sidebar that contains all vehicles.
+ * 
+ * @author  Matthias Gianfelice
+ * @version 0.1.0
+ * @see     Vehicle
+ * @see     UnitList
+ */
 public class VehicleLayout extends DDVerticalLayout {
 
+	// ------------------------------ Attribute(s) -----------------------------
+	/** The default serial version id. */
 	private static final long serialVersionUID = 1L;
 	
+	/** The parent tab for update-events. */
+	private TabMap tab;
+	
+	// ----------------------------- Constructor(s) ----------------------------
+	/**
+	 * Creates the component and sets the parent tab.
+	 * 
+	 * @param tab The parent tab
+	 */
+	public VehicleLayout(TabMap tab) {
+		this.tab = tab;
+	}
+	
+	// ------------------------------- Method(s) -------------------------------
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public void attach() {
 		super.attach();
 		
@@ -30,7 +57,7 @@ public class VehicleLayout extends DDVerticalLayout {
 			Vehicle v = VehicleContainer.getVehicle(con.getItem(id));
 			if (v == null) continue;
 
-			UnitList u = new UnitList(v);
+			UnitList u = new UnitList(tab, v);
 			File file = v.getImage();
 			Resource res = null;
 			if (file == null) {
@@ -48,7 +75,6 @@ public class VehicleLayout extends DDVerticalLayout {
 		
 		setDragMode(LayoutDragMode.CLONE);
 		setDropHandler(new RemoveHandler());
-
 	}
 
 }

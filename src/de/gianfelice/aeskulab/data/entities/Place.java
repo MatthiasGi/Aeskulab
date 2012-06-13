@@ -16,7 +16,7 @@ import de.gianfelice.aeskulab.system.utils.FileUtil;
  * Remarkable places, e.g. treatment tent.
  * 
  * @author  Matthias Gianfelice
- * @version 0.1.0
+ * @version 0.2.0
  */
 @Entity
 @Table(name = "place")
@@ -268,6 +268,17 @@ public class Place extends PersistentObject {
 	public void setLeft(Integer left) {
 		this.leftPos = left;
 		store();
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null || !(obj instanceof Place)) return false;
+		Place place = (Place) obj;
+		return getId().equals(place.getId());
 	}
 
 }

@@ -18,7 +18,7 @@ import de.gianfelice.aeskulab.system.utils.FileUtil;
  * An entity to store vehicles.
  * 
  * @author  Matthias Gianfelice
- * @version 0.2.0
+ * @version 0.3.0
  */
 @Entity
 @Table(name = "vehicle")
@@ -245,6 +245,17 @@ public class Vehicle extends PersistentObject {
 	public void setLeft(Integer left) {
 		this.leftPos = left;
 		store();
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null || !(obj instanceof Vehicle)) return false;
+		Vehicle vehicle = (Vehicle) obj;
+		return getId().equals(vehicle.getId());
 	}
 
 }

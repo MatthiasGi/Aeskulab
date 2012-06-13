@@ -18,7 +18,7 @@ import de.gianfelice.aeskulab.system.utils.FileUtil;
  * object.
  *  
  * @author  Matthias Gianfelice
- * @version 0.2.1
+ * @version 0.3.0
  * @see     User
  */
 @Entity

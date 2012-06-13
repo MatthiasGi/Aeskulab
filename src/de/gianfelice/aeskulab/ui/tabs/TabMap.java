@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -45,6 +46,7 @@ import com.vaadin.ui.Upload.ProgressListener;
 import com.vaadin.ui.Upload.Receiver;
 import com.vaadin.ui.Upload.StartedEvent;
 import com.vaadin.ui.Upload.StartedListener;
+import com.vaadin.ui.Window;
 import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
@@ -67,7 +69,6 @@ import de.gianfelice.aeskulab.ui.tabs.map.VehicleLayout;
 
 import fi.jasoft.dragdroplayouts.DDAbsoluteLayout;
 import fi.jasoft.dragdroplayouts.DDAccordion;
-import fi.jasoft.dragdroplayouts.DDGridLayout;
 import fi.jasoft.dragdroplayouts.DDVerticalLayout;
 import fi.jasoft.dragdroplayouts.DDAbsoluteLayout.AbsoluteLayoutTargetDetails;
 import fi.jasoft.dragdroplayouts.client.ui.LayoutDragMode;
@@ -77,7 +78,7 @@ import fi.jasoft.dragdroplayouts.events.LayoutBoundTransferable;
  * This tab offers a tactical overview.
  * 
  * @author  Matthias Gianfelice
- * @version 0.0.1
+ * @version 0.1.0
  */
 public class TabMap extends Tab implements Receiver, FailedListener,
 		FinishedListener, ProgressListener, StartedListener, DropHandler {
@@ -125,6 +126,20 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 	/** Place container. */
 	private PlaceLayout places;
 	
+	/** Popup with information. */
+	private Window popup;
+	
+	// ----------------------------- Constructor(s) ----------------------------
+	/**
+	 * Creates the tab.
+	 */
+	public TabMap() {
+		super();
+		popup = new Window("Einheiteninformationen");
+		popup.setWidth("600px");
+		popup.setHeight("300px");
+	}
+	
 	// ------------------------------- Method(s) -------------------------------
 	/**
 	 * {@inheritDoc}
@@ -132,10 +147,10 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 	@Override
 	public ComponentContainer getContentContainer() {
 		format = new SimpleDateFormat("HH:mm:ss");
-		squads = new SquadLayout();
-		vehicles = new VehicleLayout();
-		helpers = new HelperLayout();
-		places = new PlaceLayout();
+		squads = new SquadLayout(this);
+		vehicles = new VehicleLayout(this);
+		helpers = new HelperLayout(this);
+		places = new PlaceLayout(this);
 		
 		horPanel = new HorizontalSplitPanel();
 		horPanel.setSplitPosition(70);
@@ -215,13 +230,30 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 			}
 		});
 		horToolbar.addComponent(lblClock);
-		// TODO: Temporary
-		// horToolbar.addComponent(ref);
+		horToolbar.addComponent(ref);
 		
 		map = new Embedded();
 		ddAbsMap.addComponent(map);
 		
 		return horPanel;
+	}
+	
+	/**
+	 * Shows the popup window with the given content, if it isn't displayed yet,
+	 * and sets the position, if needed.
+	 * 
+	 * @param content The content for the window
+	 * @param left    The left coordinate
+	 * @param top     The top coordinate
+	 */
+	public void showWindow(ComponentContainer content, int left, int top) {
+		popup.setContent(content);
+		Window win = getApplication().getMainWindow();
+		if (!win.getChildWindows().contains(popup)) {
+			win.addWindow(popup);
+			popup.setPositionX(left);
+			popup.setPositionY(top);
+		}
 	}
 	
 	/**
@@ -245,7 +277,7 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 		List<Squad> lstS = DBManager.getCommunicator().list(Squad.class);
 		for (Squad s : lstS) {
 			if (s.getLeft() == null || s.getTop() == null) continue;
-			Unit u = new Unit(s);
+			Unit u = new Unit(this, s);
 			ddAbsMap.addComponent(u);
 			ComponentPosition pos = ddAbsMap.getPosition(u);
 			pos.setLeft((float) s.getLeft(), UNITS_PIXELS);
@@ -254,7 +286,7 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 		List<Vehicle> lstV = DBManager.getCommunicator().list(Vehicle.class);
 		for (Vehicle v : lstV) {
 			if (v.getLeft() == null || v.getTop() == null) continue;
-			Unit u = new Unit(v);
+			Unit u = new Unit(this, v);
 			ddAbsMap.addComponent(u);
 			ComponentPosition pos = ddAbsMap.getPosition(u);
 			pos.setLeft((float) v.getLeft(), UNITS_PIXELS);
@@ -263,7 +295,7 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 		List<Helper> lstH = DBManager.getCommunicator().list(Helper.class);
 		for (Helper h : lstH) {
 			if (h.getLeft() == null || h.getTop() == null) continue;
-			Unit u = new Unit(h);
+			Unit u = new Unit(this, h);
 			ddAbsMap.addComponent(u);
 			ComponentPosition pos = ddAbsMap.getPosition(u);
 			pos.setLeft((float) h.getLeft(), UNITS_PIXELS);
@@ -273,10 +305,9 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 		for (Place p : lstP) {
 			if (p.getLeft() == null || p.getTop() == null) continue;
 			ComPlace c = new ComPlace(this, p);
-			c.setName(p.getName());
-			for (Squad s : p.getSquads()) c.addUnit(new Unit(s));
-			for (Vehicle v : p.getVehicles()) c.addUnit(new Unit(v));
-			for (Helper h : p.getHelpers()) c.addUnit(new Unit(h));
+			for (Squad s : p.getSquads()) c.addUnit(new Unit(this, s));
+			for (Vehicle v : p.getVehicles()) c.addUnit(new Unit(this, v));
+			for (Helper h : p.getHelpers()) c.addUnit(new Unit(this, h));
 			ddAbsMap.addComponent(c);
 			ComponentPosition pos = ddAbsMap.getPosition(c);
 			pos.setLeft((float) p.getLeft(), UNITS_PIXELS);
@@ -436,7 +467,7 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 		if (entity instanceof Place && !onMap((Place) entity)) {
 			u = new ComPlace(this, (Place) entity);
 		} else if (!onMap(entity)) {
-			u = new Unit(entity);
+			u = new Unit(this, entity);
 		} else {
 			return;
 		}
@@ -450,7 +481,13 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 		savePosition(entity, left, top);
 	}
 	
-	@SuppressWarnings("javadoc") // TODO
+	/**
+	 * Saves the position of the given object.
+	 * 
+	 * @param obj  The object
+	 * @param left The left coordinate
+	 * @param top  The top coordinate
+	 */
 	public void savePosition(Object obj, Integer left, Integer top) {
 		if (obj instanceof Squad) {
 			((Squad) obj).setLeft(left);
@@ -466,47 +503,113 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 			((Place) obj).setTop(top);
 		}
 	}
-
-	@SuppressWarnings("javadoc") // TODO
-	public DDAbsoluteLayout getDDLayout() {
-		return ddAbsMap;
-	}
 	
-	// TODO
-	@SuppressWarnings("javadoc")
+	/**
+	 * Checks, whether the given squad is already on the map.
+	 * 
+	 * @param  squad The squad
+	 * @return       If the squad is already on the map.
+	 */
 	public boolean onMap(Squad squad) {
 		List<Place> lst = DBManager.getCommunicator().list(Place.class);
 		for (Place p : lst) if (p.getSquads().contains(squad)) return true;
 		return (squad.getTop() != null && squad.getLeft() != null); 
 	}
 	
-	// TODO
-	@SuppressWarnings("javadoc")
+	/**
+	 * Checks, whether the given vehicle is already on the map.
+	 * 
+	 * @param  vehicle The vehicle
+	 * @return         If the vehicle is already on the map.
+	 */
 	public boolean onMap(Vehicle vehicle) {
 		List<Place> lst = DBManager.getCommunicator().list(Place.class);
 		for (Place p : lst) if (p.getVehicles().contains(vehicle)) return true;
 		return (vehicle.getTop() != null && vehicle.getLeft() != null);
 	}
 	
-	@SuppressWarnings("javadoc") // TODO
+	/**
+	 * Checks, whether the given helper is already on the map.
+	 * 
+	 * @param  helper The helper
+	 * @return        If the helper is already on the map.
+	 */
 	public boolean onMap(Helper helper) {
 		List<Place> lst = DBManager.getCommunicator().list(Place.class);
 		for (Place p : lst) if (p.getHelpers().contains(helper)) return true;
 		return (helper.getTop() != null && helper.getLeft() != null);
 	}
 	
-	@SuppressWarnings("javadoc") // TODO
+	/**
+	 * Checks, whether the given place is already on the map.
+	 * 
+	 * @param  place The place
+	 * @return       If the place is already on the map.
+	 */
 	public boolean onMap(Place place) {
 		return (place.getTop() != null && place.getLeft() != null);
 	}
 	
-	@SuppressWarnings("javadoc") // TODO
+	/**
+	 * Checks, whether the given object is already on the map.
+	 * 
+	 * @param  obj The object
+	 * @return     If the object is already on the map.
+	 */
 	public boolean onMap(Object obj) {
 		if (obj instanceof Squad   && onMap((Squad) obj))   return true;
 		if (obj instanceof Vehicle && onMap((Vehicle) obj)) return true;
 		if (obj instanceof Helper  && onMap((Helper) obj))  return true;
 		if (obj instanceof Place   && onMap((Place) obj))   return true;
 		return false;
+	}
+
+	/**
+	 * Updates the state of a squad.
+	 * 
+	 * @param squad The squad
+	 * @param state The state
+	 */
+	public void updateState(Squad squad, int state) {
+		Iterator<Component> it = acc.getComponentIterator();
+		while (it.hasNext()) {
+			Component com = it.next();
+			if (!(com instanceof DDVerticalLayout)) continue;
+			Iterator<Component> it2 =
+					((DDVerticalLayout) com).getComponentIterator();
+			
+			while (it2.hasNext()) {
+				Component com2 = it2.next();
+				if (!(com2 instanceof UnitList)) continue;
+				UnitList u = (UnitList) com2;
+				Object o = u.getEntity();
+				if (squad.equals(o)) u.setState(state);
+			}
+		}
+	}
+
+	/**
+	 * Updates the state of a vehicle.
+	 * 
+	 * @param vehicle The vehicle
+	 * @param state   The state
+	 */
+	public void updateState(Vehicle vehicle, int state) {
+		Iterator<Component> it = acc.getComponentIterator();
+		while (it.hasNext()) {
+			Component com = it.next();
+			if (!(com instanceof DDVerticalLayout)) continue;
+			Iterator<Component> it2 =
+					((DDVerticalLayout) com).getComponentIterator();
+			
+			while (it2.hasNext()) {
+				Component com2 = it2.next();
+				if (!(com2 instanceof UnitList)) continue;
+				UnitList u = (UnitList) com2;
+				Object o = u.getEntity();
+				if (vehicle.equals(o)) u.setState(state);
+			}
+		}
 	}
 
 }

@@ -3,7 +3,6 @@ package de.gianfelice.aeskulab;
 import com.vaadin.Application;
 
 import de.gianfelice.aeskulab.system.SessionHandler;
-import de.gianfelice.aeskulab.system.authentication.AuthenticationUtil;
 import de.gianfelice.aeskulab.ui.MainWindow;
 
 /**
@@ -29,9 +28,6 @@ public class Aeskulab extends Application {
 	public void init() {
 		SessionHandler.initialise(this);
 		setTheme("aeskulab");
-		
-		// TODO: Temporary
-		SessionHandler.setUser(AuthenticationUtil.getUserByEmail("matthias@gianfelice.de"));
 
 		MainWindow mainWindow = new MainWindow();
 		mainWindow.executeJavaScript(

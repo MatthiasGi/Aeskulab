@@ -1,19 +1,25 @@
 package de.gianfelice.aeskulab.ui.components;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.vaadin.event.LayoutEvents.LayoutClickEvent;
+import com.vaadin.event.LayoutEvents.LayoutClickListener;
 import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptAll;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
 import com.vaadin.terminal.ClassResource;
+import com.vaadin.terminal.FileResource;
+import com.vaadin.terminal.Resource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.Embedded;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
@@ -28,28 +34,49 @@ import fi.jasoft.dragdroplayouts.DDGridLayout;
 import fi.jasoft.dragdroplayouts.client.ui.LayoutDragMode;
 import fi.jasoft.dragdroplayouts.events.LayoutBoundTransferable;
 
-// TODO: Temporary
-@SuppressWarnings("javadoc")
-public class ComPlace extends CustomComponent implements DropHandler {
+/**
+ * A component for D&D purposes to represent a place.
+ * 
+ * @author  Matthias Gianfelice
+ * @version 0.1.0
+ * @see     Place
+ */
+public class ComPlace extends CustomComponent implements DropHandler,
+		LayoutClickListener {
 
+	// ------------------------------ Attribute(s) -----------------------------
+	/** The default serial version id. */
 	private static final long serialVersionUID = 1L;
 	
+	/** The name of the place. */
 	private Label name;
 	
+	/** A grid to hold different entities. */
 	private DDGrid grid;
 	
+	/** The place itself. */
 	private Place place;
 	
+	/** The parent tab for update-events. */
 	private TabMap tab;
 	
+	/** The tactical image. */
 	private Embedded img;
 	
+	// ----------------------------- Constructor(s) ----------------------------
+	/**
+	 * Creates the component.
+	 * 
+	 * @param tab   The parent tab
+	 * @param place The place itself
+	 */
 	public ComPlace(TabMap tab, Place place) {
 		this.tab = tab;
 		this.place = place;
 		setSizeUndefined();
 
 		VerticalLayout verLayout = new VerticalLayout();
+		verLayout.addListener(this);
 		setCompositionRoot(verLayout);
 		
 		img = new Embedded();
@@ -74,15 +101,19 @@ public class ComPlace extends CustomComponent implements DropHandler {
 		verLayout.setComponentAlignment(grid, Alignment.TOP_CENTER);
 	}
 	
+	// ------------------------------- Method(s) -------------------------------
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public void attach() {
 		super.attach();
 		img.setSource(new ClassResource("res/tac/ort.png", getApplication()));
 	}
-	
-	public void setName(String name) {
-		this.name.setValue(name);
-	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void drop(DragAndDropEvent event) {
 		LayoutBoundTransferable tran = (LayoutBoundTransferable)
@@ -94,7 +125,7 @@ public class ComPlace extends CustomComponent implements DropHandler {
 			// Sidebar -> ComPlace
 			Object o = ((UnitList) com).getEntity();
 			if (tab.onMap(o)) return;
-			u = new Unit(o);
+			u = new Unit(tab, o);
 			addObject(o);
 			
 		} else if (com instanceof Unit) {
@@ -114,6 +145,12 @@ public class ComPlace extends CustomComponent implements DropHandler {
 		grid.recalculateLayout();
 	}
 	
+	/**
+	 * Adds an entity to the place.
+	 * 
+	 * @param  o The entity
+	 * @return   Whether the entity was valid
+	 */
 	public boolean addObject(Object o) {
 		if (o instanceof Squad) {
 			place.addSquad((Squad) o);
@@ -126,25 +163,92 @@ public class ComPlace extends CustomComponent implements DropHandler {
 		}
 		return true;
 	}
-	
+
+	/**
+	 * Adds a unit to the layout.
+	 * 
+	 * @param u The unit
+	 */
 	public void addUnit(Unit u) {
 		grid.addComponent(u);
 		grid.recalculateLayout();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public AcceptCriterion getAcceptCriterion() {
 		return AcceptAll.get();
 	}
-	
-	public class DDGrid extends DDGridLayout {
+
+	/**
+	 * Gets the corresponding place.
+	 * 
+	 * @return The place
+	 */
+	public Place getPlace() {
+		return place;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void layoutClick(LayoutClickEvent event) {
+		HorizontalLayout horLayout = new HorizontalLayout();
+		horLayout.setMargin(true);
+		horLayout.setSpacing(true);
 		
+		Embedded emb = new Embedded();
+		emb.setWidth("150px");
+		File img = place.getImage();
+		Resource res;
+		if (img == null) {
+			res = new ClassResource("res/150/transformer.png",
+					getApplication());
+		} else {
+			res = new FileResource(img, getApplication());
+		}
+		emb.setSource(res);
+		horLayout.addComponent(emb);
+		
+		Label lblName = new Label(place.getName());
+		lblName.setStyleName(Reindeer.LABEL_H1);
+		horLayout.addComponent(lblName);
+		
+		tab.showWindow(horLayout, event.getClientX(), event.getClientY());
+	}
+
+	
+	// ---------------------------- Inner Class(es) ----------------------------
+	/**
+	 * The grid inside the component.
+	 * 
+	 * @author  Matthias Gianfelice
+	 * @version 1.0.0
+	 */
+	public class DDGrid extends DDGridLayout {
+
+		// ---------------------------- Attribute(s) ---------------------------
+		/** The default serial version id. */
 		private static final long serialVersionUID = 1L;
 
+		// --------------------------- Constructor(s) --------------------------
+		/**
+		 * Creates the layout.
+		 * 
+		 * @param i The columns
+		 * @param j The rows
+		 */
 		public DDGrid(int i, int j) {
 			super(i, j);
 		}
 
+		// ----------------------------- Method(s) -----------------------------
+		/**
+		 * Recalculates the layout and rearranges the components.
+		 */
 		public void recalculateLayout() {
 			double i = getComponentCount();
 			List<Component> coms = new ArrayList<Component>();
@@ -173,13 +277,13 @@ public class ComPlace extends CustomComponent implements DropHandler {
 			}
 		}
 		
+		/**
+		 * Gets the corresponding place.
+		 * 
+		 * @return The place
+		 */
 		public Place getPlace() {
 			return place;
 		}
 	}
-	
-	public Place getPlace() {
-		return place;
-	}
-
 }

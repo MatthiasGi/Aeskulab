@@ -16,7 +16,7 @@ import de.gianfelice.aeskulab.system.persistence.PersistentObject;
  * An entity to group {@link Helper} objects inside a squad.
  * 
  * @author  Matthias Gianfelice
- * @version 0.1.0
+ * @version 0.2.0
  * @see     Helper
  */
 @Entity
@@ -212,6 +212,17 @@ public class Squad extends PersistentObject {
 	public void setLeft(Integer left) {
 		this.leftPos = left;
 		store();
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null || !(obj instanceof Squad)) return false;
+		Squad squad = (Squad) obj;
+		return getId().equals(squad.getId());
 	}
 
 }

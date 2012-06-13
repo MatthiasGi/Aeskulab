@@ -13,15 +13,42 @@ import de.gianfelice.aeskulab.data.container.HelperContainer;
 import de.gianfelice.aeskulab.data.entities.Helper;
 import de.gianfelice.aeskulab.data.entities.Qualification;
 import de.gianfelice.aeskulab.ui.components.UnitList;
+import de.gianfelice.aeskulab.ui.tabs.TabMap;
 import fi.jasoft.dragdroplayouts.DDVerticalLayout;
 import fi.jasoft.dragdroplayouts.client.ui.LayoutDragMode;
 
-// TODO: Temporary
-@SuppressWarnings("javadoc")
+/**
+ * A sidebar that contains all helpers.
+ * 
+ * @author  Matthias Gianfelice
+ * @version 0.1.0
+ * @see     Helper
+ * @see     UnitList
+ */
 public class HelperLayout extends DDVerticalLayout {
 
+	// ------------------------------ Attribute(s) -----------------------------
+	/** The default serial version id. */
 	private static final long serialVersionUID = 1L;
 	
+	/** The parent tab for update-events. */
+	private TabMap tab;
+	
+	// ----------------------------- Constructor(s) ----------------------------
+	/**
+	 * Creates the component and sets the parent tab.
+	 * 
+	 * @param tab The parent tab
+	 */
+	public HelperLayout(TabMap tab) {
+		this.tab = tab;
+	}
+	
+	// ------------------------------- Method(s) -------------------------------
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public void attach() {
 		super.attach();
 		
@@ -32,7 +59,7 @@ public class HelperLayout extends DDVerticalLayout {
 			Helper h = con.getItem(id).getBean();
 			if (h == null) continue;
 
-			UnitList u = new UnitList(h);
+			UnitList u = new UnitList(tab, h);
 			File file = h.getImage();
 			Resource res = null;
 			if (file == null) {
@@ -52,7 +79,6 @@ public class HelperLayout extends DDVerticalLayout {
 		
 		setDragMode(LayoutDragMode.CLONE);
 		setDropHandler(new RemoveHandler());
-
 	}
 
 }
