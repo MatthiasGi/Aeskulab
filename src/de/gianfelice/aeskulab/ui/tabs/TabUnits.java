@@ -231,10 +231,6 @@ public class TabUnits extends Tab implements DropHandler {
 		tblVehicle.addGeneratedColumn("image", new NotNullColumnGenerator(app));
 		tblVehicle.setColumnWidth("image", 40);
 		tblVehicle.setColumnAlignment("image", Table.ALIGN_CENTER);
-		tblVehicle.addGeneratedColumn("tacticalImage",
-				new NotNullColumnGenerator(app));
-		tblVehicle.setColumnWidth("tacticalImage", 40);
-		tblVehicle.setColumnAlignment("tacticalImage", Table.ALIGN_CENTER);
 	}
 	
 	/**

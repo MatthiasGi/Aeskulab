@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -20,7 +21,6 @@ import com.vaadin.event.dd.acceptcriteria.AcceptAll;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.FileResource;
-import com.vaadin.ui.Accordion;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.AbsoluteLayout.ComponentPosition;
@@ -33,8 +33,10 @@ import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.ProgressIndicator;
+import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 import com.vaadin.ui.Upload;
 import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.Upload.FailedEvent;
 import com.vaadin.ui.Upload.FailedListener;
 import com.vaadin.ui.Upload.FinishedEvent;
@@ -47,11 +49,26 @@ import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
 
+import de.gianfelice.aeskulab.data.entities.Helper;
+import de.gianfelice.aeskulab.data.entities.Place;
+import de.gianfelice.aeskulab.data.entities.Squad;
+import de.gianfelice.aeskulab.data.entities.Vehicle;
+import de.gianfelice.aeskulab.system.persistence.DBManager;
 import de.gianfelice.aeskulab.system.utils.FileUtil;
+import de.gianfelice.aeskulab.ui.components.ComPlace;
+import de.gianfelice.aeskulab.ui.components.ComPlace.DDGrid;
 import de.gianfelice.aeskulab.ui.components.Unit;
+import de.gianfelice.aeskulab.ui.components.UnitList;
+import de.gianfelice.aeskulab.ui.tabs.map.HelperLayout;
+import de.gianfelice.aeskulab.ui.tabs.map.PlaceLayout;
+import de.gianfelice.aeskulab.ui.tabs.map.RemoveHandler;
 import de.gianfelice.aeskulab.ui.tabs.map.SquadLayout;
+import de.gianfelice.aeskulab.ui.tabs.map.VehicleLayout;
 
 import fi.jasoft.dragdroplayouts.DDAbsoluteLayout;
+import fi.jasoft.dragdroplayouts.DDAccordion;
+import fi.jasoft.dragdroplayouts.DDGridLayout;
+import fi.jasoft.dragdroplayouts.DDVerticalLayout;
 import fi.jasoft.dragdroplayouts.DDAbsoluteLayout.AbsoluteLayoutTargetDetails;
 import fi.jasoft.dragdroplayouts.client.ui.LayoutDragMode;
 import fi.jasoft.dragdroplayouts.events.LayoutBoundTransferable;
@@ -73,7 +90,7 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 	private HorizontalSplitPanel horPanel;
 	
 	/** Accordion. */
-	private Accordion acc;
+	private DDAccordion acc;
 	
 	/** Toolbar. */
 	private HorizontalLayout horToolbar;
@@ -96,6 +113,18 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 	/** Date format for clock. */
 	private SimpleDateFormat format;
 	
+	/** Squad container. */
+	private SquadLayout squads;
+	
+	/** Vehicle container. */
+	private VehicleLayout vehicles;
+
+	/** Helper container. */
+	private HelperLayout helpers;
+	
+	/** Place container. */
+	private PlaceLayout places;
+	
 	// ------------------------------- Method(s) -------------------------------
 	/**
 	 * {@inheritDoc}
@@ -103,13 +132,29 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 	@Override
 	public ComponentContainer getContentContainer() {
 		format = new SimpleDateFormat("HH:mm:ss");
+		squads = new SquadLayout();
+		vehicles = new VehicleLayout();
+		helpers = new HelperLayout();
+		places = new PlaceLayout();
+		
 		horPanel = new HorizontalSplitPanel();
 		horPanel.setSplitPosition(70);
 		VerticalLayout verLayout = new VerticalLayout();
 		verLayout.setSizeFull();
 		horPanel.addComponent(verLayout);
-		acc = new Accordion();
+		acc = new DDAccordion();
 		acc.setSizeFull();
+		acc.addListener(new SelectedTabChangeListener() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void selectedTabChange(SelectedTabChangeEvent event) {
+				DDVerticalLayout dd = (DDVerticalLayout) acc.getSelectedTab();
+				dd.setDragMode(LayoutDragMode.NONE);
+				dd.setDragMode(LayoutDragMode.CLONE);
+			}
+		});
+		acc.setDropHandler(new RemoveHandler());
 		horPanel.addComponent(acc);
 		
 		horToolbar = new HorizontalLayout();
@@ -157,7 +202,7 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 		horToolbar.setExpandRatio(btnCancel, 1.0f);
 		
 		final Label lblClock = new Label(format.format(new Date()));
-		lblClock.setStyleName(Reindeer.LABEL_H2);
+		lblClock.setStyleName(Reindeer.LABEL_H1);
 		lblClock.setSizeUndefined();
 		Refresher ref = new Refresher();
 		ref.setRefreshInterval(1000);
@@ -187,24 +232,56 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 		super.attach();
 		
 		Application app = getApplication();
-		acc.addTab(new SquadLayout(), "Trupps",
+		acc.addTab(squads, "Trupps",
 				new ClassResource("res/16/group.png", app));
-		acc.addTab(new Label("Fahrzeuge"), "Fahrzeuge",
+		acc.addTab(vehicles, "Fahrzeuge",
 				new ClassResource("res/16/lorry.png", app));
-		acc.addTab(new Label("Helfer"), "Helfer",
+		acc.addTab(helpers, "Helfer",
 				new ClassResource("res/16/user.png", app));
-		acc.addTab(new Label("Orte"), "Orte",
+		acc.addTab(places, "Orte",
 				new ClassResource("res/16/map.png", app));
 		updateMap();
 		
-		Unit u = new Unit();
-		ddAbsMap.addComponent(u);
-		u.setName("Gianfelice");
-		u.setTac("person");
-		u = new Unit();
-		ddAbsMap.addComponent(u);
-		u.setName("Fitzon");
-		u.setTac("person");
+		List<Squad> lstS = DBManager.getCommunicator().list(Squad.class);
+		for (Squad s : lstS) {
+			if (s.getLeft() == null || s.getTop() == null) continue;
+			Unit u = new Unit(s);
+			ddAbsMap.addComponent(u);
+			ComponentPosition pos = ddAbsMap.getPosition(u);
+			pos.setLeft((float) s.getLeft(), UNITS_PIXELS);
+			pos.setTop((float) s.getTop(), UNITS_PIXELS);
+		}
+		List<Vehicle> lstV = DBManager.getCommunicator().list(Vehicle.class);
+		for (Vehicle v : lstV) {
+			if (v.getLeft() == null || v.getTop() == null) continue;
+			Unit u = new Unit(v);
+			ddAbsMap.addComponent(u);
+			ComponentPosition pos = ddAbsMap.getPosition(u);
+			pos.setLeft((float) v.getLeft(), UNITS_PIXELS);
+			pos.setTop((float) v.getTop(), UNITS_PIXELS);
+		}
+		List<Helper> lstH = DBManager.getCommunicator().list(Helper.class);
+		for (Helper h : lstH) {
+			if (h.getLeft() == null || h.getTop() == null) continue;
+			Unit u = new Unit(h);
+			ddAbsMap.addComponent(u);
+			ComponentPosition pos = ddAbsMap.getPosition(u);
+			pos.setLeft((float) h.getLeft(), UNITS_PIXELS);
+			pos.setTop((float) h.getTop(), UNITS_PIXELS);
+		}
+		List<Place> lstP = DBManager.getCommunicator().list(Place.class);
+		for (Place p : lstP) {
+			if (p.getLeft() == null || p.getTop() == null) continue;
+			ComPlace c = new ComPlace(this, p);
+			c.setName(p.getName());
+			for (Squad s : p.getSquads()) c.addUnit(new Unit(s));
+			for (Vehicle v : p.getVehicles()) c.addUnit(new Unit(v));
+			for (Helper h : p.getHelpers()) c.addUnit(new Unit(h));
+			ddAbsMap.addComponent(c);
+			ComponentPosition pos = ddAbsMap.getPosition(c);
+			pos.setLeft((float) p.getLeft(), UNITS_PIXELS);
+			pos.setTop((float) p.getTop(), UNITS_PIXELS);
+		}
 	}
 
 	/**
@@ -302,7 +379,28 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 		LayoutBoundTransferable trans = (LayoutBoundTransferable)
 				event.getTransferable();
 		Component com = trans.getComponent();
-		if (!(com instanceof Unit)) return;
+		if (com instanceof UnitList) {
+			addUnitList(event);
+			return;
+		}
+		if (!(com instanceof Unit || com instanceof ComPlace)) return;
+		if (trans.getSourceComponent() instanceof DDGrid
+				&& com instanceof Unit) {
+			DDGrid grid = (DDGrid) trans.getSourceComponent();
+			grid.removeComponent(com);
+			grid.recalculateLayout();
+			Place p = grid.getPlace();
+			Object o = ((Unit) com).getEntity();
+			if (o instanceof Squad) {
+				p.removeSquad((Squad) o);
+			} else if (o instanceof Vehicle) {
+				p.removeVehicle((Vehicle) o);
+			} else if (o instanceof Helper) {
+				p.removeHelper((Helper) o);
+			}
+			
+			ddAbsMap.addComponent(com);
+		}
 		
 		AbsoluteLayoutTargetDetails details = (AbsoluteLayoutTargetDetails)
 				event.getTargetDetails();
@@ -312,6 +410,103 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 		
 		pos.setLeft((float) left, UNITS_PIXELS);
 		pos.setTop((float) top, UNITS_PIXELS);
+		Object obj;
+		if (com instanceof Unit) {
+			obj = ((Unit) com).getEntity();
+		} else {
+			obj = ((ComPlace) com).getPlace();
+		}
+		savePosition(obj, left, top);
+	}
+
+	/**
+	 * Adds a {@code UnitList}-object to the layout.
+	 * 
+	 * @param  event The drop-event
+	 */
+	private void addUnitList(DragAndDropEvent event) {
+		LayoutBoundTransferable trans = (LayoutBoundTransferable)
+				event.getTransferable();
+		UnitList com = (UnitList) trans.getComponent();
+		Object entity = com.getEntity();
+		AbsoluteLayoutTargetDetails details = (AbsoluteLayoutTargetDetails)
+				event.getTargetDetails();
+		Component u = null;
+		
+		if (entity instanceof Place && !onMap((Place) entity)) {
+			u = new ComPlace(this, (Place) entity);
+		} else if (!onMap(entity)) {
+			u = new Unit(entity);
+		} else {
+			return;
+		}
+
+		ddAbsMap.addComponent(u);
+		ComponentPosition pos = ddAbsMap.getPosition(u);
+		int left = details.getRelativeLeft();
+		int top = details.getRelativeTop();
+		pos.setLeft((float) left, UNITS_PIXELS);
+		pos.setTop((float) top, UNITS_PIXELS);
+		savePosition(entity, left, top);
+	}
+	
+	@SuppressWarnings("javadoc") // TODO
+	public void savePosition(Object obj, Integer left, Integer top) {
+		if (obj instanceof Squad) {
+			((Squad) obj).setLeft(left);
+			((Squad) obj).setTop(top);
+		} else if (obj instanceof Vehicle) {
+			((Vehicle) obj).setLeft(left);
+			((Vehicle) obj).setTop(top);
+		} else if (obj instanceof Helper) {
+			((Helper) obj).setLeft(left);
+			((Helper) obj).setTop(top);
+		} else if (obj instanceof Place) {
+			((Place) obj).setLeft(left);
+			((Place) obj).setTop(top);
+		}
+	}
+
+	@SuppressWarnings("javadoc") // TODO
+	public DDAbsoluteLayout getDDLayout() {
+		return ddAbsMap;
+	}
+	
+	// TODO
+	@SuppressWarnings("javadoc")
+	public boolean onMap(Squad squad) {
+		List<Place> lst = DBManager.getCommunicator().list(Place.class);
+		for (Place p : lst) if (p.getSquads().contains(squad)) return true;
+		return (squad.getTop() != null && squad.getLeft() != null); 
+	}
+	
+	// TODO
+	@SuppressWarnings("javadoc")
+	public boolean onMap(Vehicle vehicle) {
+		List<Place> lst = DBManager.getCommunicator().list(Place.class);
+		for (Place p : lst) if (p.getVehicles().contains(vehicle)) return true;
+		return (vehicle.getTop() != null && vehicle.getLeft() != null);
+	}
+	
+	@SuppressWarnings("javadoc") // TODO
+	public boolean onMap(Helper helper) {
+		List<Place> lst = DBManager.getCommunicator().list(Place.class);
+		for (Place p : lst) if (p.getHelpers().contains(helper)) return true;
+		return (helper.getTop() != null && helper.getLeft() != null);
+	}
+	
+	@SuppressWarnings("javadoc") // TODO
+	public boolean onMap(Place place) {
+		return (place.getTop() != null && place.getLeft() != null);
+	}
+	
+	@SuppressWarnings("javadoc") // TODO
+	public boolean onMap(Object obj) {
+		if (obj instanceof Squad   && onMap((Squad) obj))   return true;
+		if (obj instanceof Vehicle && onMap((Vehicle) obj)) return true;
+		if (obj instanceof Helper  && onMap((Helper) obj))  return true;
+		if (obj instanceof Place   && onMap((Place) obj))   return true;
+		return false;
 	}
 
 }

@@ -205,20 +205,20 @@ public class SquadSidebar extends VerticalLayout implements ClickListener,
 				form.setComponentError(new UserError(e.getMessage()));
 				return;
 			}
-			
+
+			SquadTypeContainer typeContainer = new SquadTypeContainer();
+			SquadType type = typeContainer.getItem(combo.getValue()).getBean();
 			if (item == null) {
-				item = new Squad((String) txtName.getValue());
+				item = new Squad((String) txtName.getValue(), type);
 				container.addSquad(item);
+				setItem(item);
 			} else {
 				txtName.commit();
 				item.setName((String) txtName.getValue());
+				Item i = container.getItem(item.getId());
+				i.getItemProperty("type").setValue(type);
+				item.setType(type);
 			}
-			Item i = container.getItem(item.getId());
-			SquadTypeContainer typeContainer = new SquadTypeContainer();
-			SquadType type = typeContainer.getItem(combo.getValue()).getBean();
-			i.getItemProperty("type").setValue(type);
-			item.setType(type);
-			setItem(item);
 		}
 	}
 	

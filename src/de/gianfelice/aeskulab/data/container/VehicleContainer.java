@@ -29,11 +29,11 @@ public class VehicleContainer extends HierarchicalContainer {
 	
 	/** This columns should be visible. */
 	public static final Object[] NATURAL_COLS = new Object[] {"name", "type",
-		"requirements", "image", "tacticalImage"};
+		"requirements", "image"};
 
 	/** The headers for the visible columns. */
 	public static final String[] COL_HEADERS = new String[] {"Name", "Typ",
-		"Besetzt", "Bild", "Takt. B."};
+		"Besetzt", "Bild"};
 
 	// ----------------------------- Constructor(s) ----------------------------
 	/**
@@ -47,7 +47,6 @@ public class VehicleContainer extends HierarchicalContainer {
 		addContainerProperty("state", Integer.class, 6);
 		addContainerProperty("requirements", Boolean.class, false);
 		addContainerProperty("image", File.class, null);
-		addContainerProperty("tacticalImage", File.class, null);
 		
 		List<Vehicle> vs = DBManager.getCommunicator().list(Vehicle.class);
 		for (Vehicle v : vs) addVehicle(v);
@@ -70,7 +69,6 @@ public class VehicleContainer extends HierarchicalContainer {
 		item.getItemProperty("state").setValue(v.getState());
 		item.getItemProperty("requirements").setValue(v.hasRequirements());
 		item.getItemProperty("image").setValue(v.getImage());
-		item.getItemProperty("tacticalImage").setValue(v.getTacticalImage());
 		setChildrenAllowed(v.getId(), true);
 		List<Helper> helpers = v.getHelpers();
 		if (helpers != null) {

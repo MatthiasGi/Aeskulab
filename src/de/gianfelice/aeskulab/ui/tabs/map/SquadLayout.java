@@ -4,19 +4,18 @@ import java.util.Collection;
 
 import com.vaadin.data.util.DefaultItemSorter;
 import com.vaadin.terminal.ClassResource;
-import com.vaadin.ui.VerticalLayout;
 
 import de.gianfelice.aeskulab.data.container.SquadContainer;
 import de.gianfelice.aeskulab.data.entities.Squad;
 import de.gianfelice.aeskulab.ui.components.UnitList;
+import fi.jasoft.dragdroplayouts.DDVerticalLayout;
+import fi.jasoft.dragdroplayouts.client.ui.LayoutDragMode;
 
 // TODO: Temporary
 @SuppressWarnings("javadoc")
-public class SquadLayout extends VerticalLayout {
+public class SquadLayout extends DDVerticalLayout {
 
 	private static final long serialVersionUID = 1L;
-	
-	public SquadLayout() {}
 	
 	public void attach() {
 		super.attach();
@@ -28,7 +27,7 @@ public class SquadLayout extends VerticalLayout {
 			Squad s = SquadContainer.getSquad(con.getItem(id));
 			if (s == null) continue;
 
-			UnitList u = new UnitList();
+			UnitList u = new UnitList(s);
 			u.setSource(new ClassResource("res/tac/trupp.png",
 					getApplication()));
 			u.setName(s.getName());
@@ -36,6 +35,10 @@ public class SquadLayout extends VerticalLayout {
 			u.setState(s.getState());
 			addComponent(u);
 		}
+		
+		setDragMode(LayoutDragMode.CLONE);
+		setDropHandler(new RemoveHandler());
+
 	}
 
 }

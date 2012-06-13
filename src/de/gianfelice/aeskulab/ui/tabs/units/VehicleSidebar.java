@@ -50,9 +50,6 @@ public class VehicleSidebar extends VerticalLayout implements ClickListener, But
 	/** An image for the vehicle. */
 	private ImageManager img;
 	
-	/** A tactical image for the vehicle. */
-	private ImageManager imgTac;
-	
 	/** A container with all vehicles. */
 	private VehicleContainer container;
 	
@@ -109,11 +106,6 @@ public class VehicleSidebar extends VerticalLayout implements ClickListener, But
 		verImage.setComponentAlignment(lblName, Alignment.TOP_CENTER);
 		
 		// Image
-		Label lblImg = new Label("Bild");
-		lblImg.setSizeUndefined();
-		lblImg.setStyleName(Reindeer.LABEL_H2);
-		verImage.addComponent(lblImg);
-		verImage.setComponentAlignment(lblImg, Alignment.TOP_CENTER);
 		img = new ImageManager(FileUtil.IMAGE_VEHICLE) {
 			private static final long serialVersionUID = 1L;
 			
@@ -124,23 +116,6 @@ public class VehicleSidebar extends VerticalLayout implements ClickListener, But
 		};
 		verImage.addComponent(img);
 		verImage.setComponentAlignment(img, Alignment.TOP_CENTER);
-		
-		// Tactical image
-		lblImg = new Label("Taktisches Bild");
-		lblImg.setSizeUndefined();
-		lblImg.setStyleName(Reindeer.LABEL_H2);
-		verImage.addComponent(lblImg);
-		verImage.setComponentAlignment(lblImg, Alignment.TOP_CENTER);
-		imgTac = new ImageManager(FileUtil.IMAGE_TACTICAL) {
-			private static final long serialVersionUID = 1L;
-			
-			protected void onPropertyUpdate(File newValue) {
-				super.onPropertyUpdate(newValue);
-				item.setTacticalImage(newValue);
-			}
-		};
-		verImage.addComponent(imgTac);
-		verImage.setComponentAlignment(imgTac, Alignment.TOP_CENTER);
 	
 		// Form
 		form = new Form();
@@ -274,12 +249,10 @@ public class VehicleSidebar extends VerticalLayout implements ClickListener, But
 			txtName.setValue("");
 			combo.setValue(null);
 			img.setEnabled(false);
-			imgTac.setEnabled(false);
 		} else {
 			txtName.discard();
 			combo.discard();
 			img.setEnabled(true);
-			imgTac.setEnabled(true);
 		}
 	}
 	
@@ -302,7 +275,6 @@ public class VehicleSidebar extends VerticalLayout implements ClickListener, But
 			SquadType type = item.getType();
 			combo.setValue((type == null) ? null : type.getId());
 			img.setPropertyDataSource(i.getItemProperty("image"));
-			imgTac.setPropertyDataSource(i.getItemProperty("tacticalImage"));
 		}
 		btnDelete.setEnabled(item != null);
 	}
@@ -318,11 +290,6 @@ public class VehicleSidebar extends VerticalLayout implements ClickListener, But
 		if (fileImg != null && !fileImg.delete())
 			getApplication().getMainWindow().showNotification("Das Bild des " +
 					"Fahrzeuges konnte leider nicht gelöscht werden!",
-					Notification.TYPE_ERROR_MESSAGE);
-		fileImg = item.getTacticalImage();
-		if (fileImg != null && !fileImg.delete())
-			getApplication().getMainWindow().showNotification("Das taktische " +
-					"Bild des Fahrzeuges konnte leider nicht gelöscht werden!",
 					Notification.TYPE_ERROR_MESSAGE);
 		container.removeItem(item.getId());
 		DBManager.getCommunicator().delete(item);

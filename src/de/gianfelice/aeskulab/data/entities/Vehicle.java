@@ -31,9 +31,6 @@ public class Vehicle extends PersistentObject {
 	/** An image of the vehicle. */
 	private String image;
 	
-	/** A tactical image of the vehicle. */
-	private String tacticalImage;
-	
 	/** The current state (FMS) of the vehicle. */
 	private int state;
 	
@@ -49,6 +46,12 @@ public class Vehicle extends PersistentObject {
 	@ManyToMany
 	@JoinTable(name = "helper_vehicle")
 	private List<Helper> helpers = new ArrayList<Helper>();
+	
+	/** Top position in layout. */
+	private Integer topPos;
+	
+	/** Left position in layout. */
+	private Integer leftPos;
 	
 	// ----------------------------- Constructor(s) ----------------------------
 	/**
@@ -97,37 +100,6 @@ public class Vehicle extends PersistentObject {
 			this.image = null;
 		} else {
 			this.image = image.getName();
-		}
-		store();
-	}
-
-	/**
-	 * Returns the tactical image of the vehicle.
-	 * 
-	 * @return The name of the tactical image
-	 */
-	public File getTacticalImage() {
-		if (tacticalImage == null || tacticalImage.equals("")) return null;
-		
-		try {
-			File file = FileUtil.getFile(FileUtil.IMAGE_TACTICAL, tacticalImage);
-			if (!file.isFile() || !file.exists()) return null;
-			return file;
-		} catch (Exception e) {
-			return null;
-		}
-	}
-
-	/**
-	 * Sets the tactical image of the vehicle.
-	 * 
-	 * @param image The new tactical image
-	 */
-	public void setTacticalImage(File image) {
-		if (image == null) {
-			tacticalImage = null;
-		} else {
-			tacticalImage = image.getName();
 		}
 		store();
 	}
@@ -235,6 +207,44 @@ public class Vehicle extends PersistentObject {
 	 */
 	public boolean hasRequirements() {
 		return true;
+	}
+
+	/**
+	 * Gets the top position.
+	 *
+	 * @return The top position
+	 */
+	public Integer getTop() {
+		return topPos;
+	}
+
+	/**
+	 * Sets the top position.
+	 *
+	 * @param top The new top position
+	 */
+	public void setTop(Integer top) {
+		this.topPos = top;
+		store();
+	}
+
+	/**
+	 * Gets the left position.
+	 *
+	 * @return The left position
+	 */
+	public Integer getLeft() {
+		return leftPos;
+	}
+
+	/**
+	 * Sets the left position.
+	 *
+	 * @param left The new left position
+	 */
+	public void setLeft(Integer left) {
+		this.leftPos = left;
+		store();
 	}
 
 }

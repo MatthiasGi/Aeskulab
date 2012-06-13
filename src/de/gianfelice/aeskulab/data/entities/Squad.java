@@ -43,11 +43,17 @@ public class Squad extends PersistentObject {
 	@JoinTable(name = "helper_squad")
 	private List<Helper> helpers = new ArrayList<Helper>();
 	
+	/** Top position in layout. */
+	private Integer topPos;
+	
+	/** Left position in layout. */
+	private Integer leftPos;
+
 	// ----------------------------- Constructor(s) ----------------------------	
 	/**
 	 * An empty constructor which does nothing.
 	 * 
-	 * @see #Squad(String)
+	 * @see #Squad(String, SquadType)
 	 */
 	public Squad() {}
 	
@@ -56,9 +62,12 @@ public class Squad extends PersistentObject {
 	 * preferred.
 	 *
 	 * @param name The name for this squad
+	 * @param type The type of this squad
 	 */
-	public Squad(String name) {
-		setName(name);
+	public Squad(String name, SquadType type) {
+		this.name = name;
+		this.type = type;
+		store();
 	}
 
 	// ------------------------------- Method(s) -------------------------------
@@ -165,6 +174,44 @@ public class Squad extends PersistentObject {
 	 */
 	public boolean hasRequirements() {
 		return true;
+	}
+
+	/**
+	 * Gets the top position.
+	 *
+	 * @return The top position
+	 */
+	public Integer getTop() {
+		return topPos;
+	}
+
+	/**
+	 * Sets the top position.
+	 *
+	 * @param top The new top position
+	 */
+	public void setTop(Integer top) {
+		this.topPos = top;
+		store();
+	}
+
+	/**
+	 * Gets the left position.
+	 *
+	 * @return The left position
+	 */
+	public Integer getLeft() {
+		return leftPos;
+	}
+
+	/**
+	 * Sets the left position.
+	 *
+	 * @param left The new left position
+	 */
+	public void setLeft(Integer left) {
+		this.leftPos = left;
+		store();
 	}
 
 }

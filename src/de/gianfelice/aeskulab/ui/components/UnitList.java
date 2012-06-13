@@ -23,7 +23,11 @@ public class UnitList extends CustomComponent {
 	
 	private Label lblState;
 	
-	public UnitList() {
+	private Object entity;
+	
+	public UnitList(Object entity) {
+		this.entity = entity;
+		
 		HorizontalLayout horLayout = new HorizontalLayout();
 		horLayout.setStyleName(Reindeer.LAYOUT_WHITE);
 		horLayout.setWidth("100%");
@@ -70,6 +74,10 @@ public class UnitList extends CustomComponent {
 	
 	public void setState(int state) {
 		lblState.setValue(state);
+	}
+	
+	public Object getEntity() {
+		return entity;
 	}
 
 }

@@ -48,6 +48,12 @@ public class Place extends PersistentObject {
 	/** An image of the place. */
 	private String image;
 	
+	/** Top position in layout. */
+	private Integer topPos;
+	
+	/** Left position in layout. */
+	private Integer leftPos;
+	
 	// ----------------------------- Constructor(s) ----------------------------
 	/**
 	 * An empty constructor to create the object.
@@ -129,17 +135,8 @@ public class Place extends PersistentObject {
 	 *
 	 * @param vehicle The vehicle
 	 */
-	public void removeCar(Vehicle vehicle) {
+	public void removeVehicle(Vehicle vehicle) {
 		if (vehicles.remove(vehicle)) store();
-	}
-	
-	/**
-	 * Gets the vehicles.
-	 *
-	 * @return The vehicles
-	 */
-	public List<Vehicle> getCars() {
-		return vehicles;
 	}
 	
 	/**
@@ -232,6 +229,44 @@ public class Place extends PersistentObject {
 	 */
 	public void setHelpers(List<Helper> helpers) {
 		this.helpers = helpers;
+		store();
+	}
+
+	/**
+	 * Gets the top position.
+	 *
+	 * @return The top position
+	 */
+	public Integer getTop() {
+		return topPos;
+	}
+
+	/**
+	 * Sets the top position.
+	 *
+	 * @param top The new top position
+	 */
+	public void setTop(Integer top) {
+		this.topPos = top;
+		store();
+	}
+
+	/**
+	 * Gets the left position.
+	 *
+	 * @return The left position
+	 */
+	public Integer getLeft() {
+		return leftPos;
+	}
+
+	/**
+	 * Sets the left position.
+	 *
+	 * @param left The new left position
+	 */
+	public void setLeft(Integer left) {
+		this.leftPos = left;
 		store();
 	}
 
