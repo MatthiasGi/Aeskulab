@@ -8,6 +8,7 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.FileResource;
+import com.vaadin.ui.Audio;
 import com.vaadin.ui.Embedded;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -25,7 +26,7 @@ import de.gianfelice.aeskulab.ui.tabs.TabMap;
  * A popup window to display information about a vehicle.
  * 
  * @author  Matthias Gianfelice
- * @version 0.1.0
+ * @version 0.1.1
  * @see     Vehicle
  */
 public class WinVehicle extends HorizontalLayout implements ValueChangeListener {
@@ -48,6 +49,9 @@ public class WinVehicle extends HorizontalLayout implements ValueChangeListener 
 	
 	/** A slider to set the state of the vehicle. */
 	private Slider state;
+	
+	/** An audio component. */
+	private Audio audio;
 
 	// ----------------------------- Constructor(s) ----------------------------
 	/**
@@ -87,6 +91,11 @@ public class WinVehicle extends HorizontalLayout implements ValueChangeListener 
 			state.setValue(vehicle.getState());
 		} catch (Exception e) {}
 		addComponent(state);
+		
+		audio = new Audio();
+		addComponent(audio);
+		audio.setWidth("0px");
+		audio.setHeight("0px");
 	}
 
 	// ------------------------------- Method(s) -------------------------------
@@ -103,6 +112,7 @@ public class WinVehicle extends HorizontalLayout implements ValueChangeListener 
 		} else {
 			emb.setSource(new FileResource(file, app));
 		}
+		audio.setSource(new ClassResource("res/alarm.mp3", app));
 		
 		List<Helper> lst = vehicle.getHelpers();
 		for (Helper h : lst) {
@@ -151,6 +161,7 @@ public class WinVehicle extends HorizontalLayout implements ValueChangeListener 
 		int state = ((Double) this.state.getValue()).intValue();
 		vehicle.setState(state);
 		tab.updateState(vehicle, state);
+		if (state == 0) audio.play();
 	}
 	
 }

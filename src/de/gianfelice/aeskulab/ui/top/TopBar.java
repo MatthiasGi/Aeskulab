@@ -17,7 +17,7 @@ import de.gianfelice.aeskulab.ui.top.buttons.UserInfo;
  * The main menubar of this application.
  * 
  * @author  Matthias Gianfelice
- * @version 1.0.0
+ * @version 1.0.1
  * @see     MenuComponent
  */
 public class TopBar extends HorizontalLayout
@@ -55,7 +55,7 @@ public class TopBar extends HorizontalLayout
 		setComponentAlignment(horLayout, Alignment.MIDDLE_CENTER);
 		setExpandRatio(horLayout, 1.0f);
 		
-		addMenuComponent(new MenuMap(), horLayout);
+		addMenuComponent(new MenuMap(layout), horLayout);
 		addMenuComponent(new MenuUnits(), horLayout);
 		addMenuComponent(new MenuWork(), horLayout);
 		addMenuComponent(new MenuLog(), horLayout);

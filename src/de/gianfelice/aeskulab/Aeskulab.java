@@ -9,7 +9,7 @@ import de.gianfelice.aeskulab.ui.MainWindow;
  * TODO: Description.
  *
  * @author  Matthias Gianfelice
- * @version 0.5.0-SNAPSHOT
+ * @version 0.7.0-RC1
  */
 public class Aeskulab extends Application {
 	
@@ -18,7 +18,7 @@ public class Aeskulab extends Application {
 	private static final long serialVersionUID = 1L;
 	
 	/** The current version of the application. */
-	public static final String VERSION = "0.5.0-SNAPSHOT";
+	public static final String VERSION = "0.7.0-RC1";
 
 	// ------------------------------- Method(s) -------------------------------
 	/**

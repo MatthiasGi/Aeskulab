@@ -55,10 +55,14 @@ import de.gianfelice.aeskulab.data.entities.Helper;
 import de.gianfelice.aeskulab.data.entities.Place;
 import de.gianfelice.aeskulab.data.entities.Squad;
 import de.gianfelice.aeskulab.data.entities.Vehicle;
+import de.gianfelice.aeskulab.data.entities.Work;
 import de.gianfelice.aeskulab.system.persistence.DBManager;
 import de.gianfelice.aeskulab.system.utils.FileUtil;
+import de.gianfelice.aeskulab.ui.MainLayout;
 import de.gianfelice.aeskulab.ui.components.ComPlace;
 import de.gianfelice.aeskulab.ui.components.ComPlace.DDGrid;
+import de.gianfelice.aeskulab.ui.components.ComWork;
+import de.gianfelice.aeskulab.ui.components.ComWork.DDGridW;
 import de.gianfelice.aeskulab.ui.components.Unit;
 import de.gianfelice.aeskulab.ui.components.UnitList;
 import de.gianfelice.aeskulab.ui.tabs.map.HelperLayout;
@@ -66,6 +70,7 @@ import de.gianfelice.aeskulab.ui.tabs.map.PlaceLayout;
 import de.gianfelice.aeskulab.ui.tabs.map.RemoveHandler;
 import de.gianfelice.aeskulab.ui.tabs.map.SquadLayout;
 import de.gianfelice.aeskulab.ui.tabs.map.VehicleLayout;
+import de.gianfelice.aeskulab.ui.tabs.map.WorkLayout;
 
 import fi.jasoft.dragdroplayouts.DDAbsoluteLayout;
 import fi.jasoft.dragdroplayouts.DDAccordion;
@@ -78,7 +83,7 @@ import fi.jasoft.dragdroplayouts.events.LayoutBoundTransferable;
  * This tab offers a tactical overview.
  * 
  * @author  Matthias Gianfelice
- * @version 0.1.0
+ * @version 1.0.0
  */
 public class TabMap extends Tab implements Receiver, FailedListener,
 		FinishedListener, ProgressListener, StartedListener, DropHandler {
@@ -126,15 +131,24 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 	/** Place container. */
 	private PlaceLayout places;
 	
+	/** Work container. */
+	private WorkLayout works;
+	
 	/** Popup with information. */
 	private Window popup;
+	
+	/** The main layout. */
+	private MainLayout layout;
 	
 	// ----------------------------- Constructor(s) ----------------------------
 	/**
 	 * Creates the tab.
+	 * 
+	 * @param layout The main layout
 	 */
-	public TabMap() {
+	public TabMap(MainLayout layout) {
 		super();
+		this.layout = layout;
 		popup = new Window("Einheiteninformationen");
 		popup.setWidth("600px");
 		popup.setHeight("300px");
@@ -151,6 +165,7 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 		vehicles = new VehicleLayout(this);
 		helpers = new HelperLayout(this);
 		places = new PlaceLayout(this);
+		works = new WorkLayout(this);
 		
 		horPanel = new HorizontalSplitPanel();
 		horPanel.setSplitPosition(70);
@@ -272,6 +287,8 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 				new ClassResource("res/16/user.png", app));
 		acc.addTab(places, "Orte",
 				new ClassResource("res/16/map.png", app));
+		acc.addTab(works, "Einsätze",
+				new ClassResource("res/16/stop.png", app));
 		updateMap();
 		
 		List<Squad> lstS = DBManager.getCommunicator().list(Squad.class);
@@ -312,6 +329,17 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 			ComponentPosition pos = ddAbsMap.getPosition(c);
 			pos.setLeft((float) p.getLeft(), UNITS_PIXELS);
 			pos.setTop((float) p.getTop(), UNITS_PIXELS);
+		}
+		List<Work> lstW = DBManager.getCommunicator().list(Work.class);
+		for (Work w : lstW) {
+			if (w.getLeft() == null || w.getTop() == null) continue;
+			ComWork c = new ComWork(this, w);
+			for (Squad s : w.getSquads()) c.addUnit(new Unit(this, s));
+			for (Vehicle v : w.getVehicles()) c.addUnit(new Unit(this, v));
+			ddAbsMap.addComponent(c);
+			ComponentPosition pos = ddAbsMap.getPosition(c);
+			pos.setLeft((float) w.getLeft(), UNITS_PIXELS);
+			pos.setTop((float) w.getTop(), UNITS_PIXELS);
 		}
 	}
 
@@ -414,7 +442,8 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 			addUnitList(event);
 			return;
 		}
-		if (!(com instanceof Unit || com instanceof ComPlace)) return;
+		if (!(com instanceof Unit || com instanceof ComPlace
+				|| com instanceof ComWork)) return;
 		if (trans.getSourceComponent() instanceof DDGrid
 				&& com instanceof Unit) {
 			DDGrid grid = (DDGrid) trans.getSourceComponent();
@@ -431,6 +460,18 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 			}
 			
 			ddAbsMap.addComponent(com);
+		} else if (trans.getSourceComponent() instanceof DDGridW
+				&& com instanceof Unit) {
+			DDGridW grid = (DDGridW) trans.getSourceComponent();
+			grid.removeComponent(com);
+			grid.recalculateLayout();
+			Work w = grid.getWork();
+			Object o = ((Unit) com).getEntity();
+			if (o instanceof Squad) {
+				w.removeSquad((Squad) o);
+			} else if (o instanceof Vehicle) {
+				w.removeVehicle((Vehicle) o);
+			}
 		}
 		
 		AbsoluteLayoutTargetDetails details = (AbsoluteLayoutTargetDetails)
@@ -441,11 +482,13 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 		
 		pos.setLeft((float) left, UNITS_PIXELS);
 		pos.setTop((float) top, UNITS_PIXELS);
-		Object obj;
+		Object obj = null;
 		if (com instanceof Unit) {
 			obj = ((Unit) com).getEntity();
-		} else {
+		} else if (com instanceof ComPlace) {
 			obj = ((ComPlace) com).getPlace();
+		} else if (com instanceof ComWork) {
+			obj = ((ComWork) com).getWork();
 		}
 		savePosition(obj, left, top);
 	}
@@ -466,6 +509,8 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 		
 		if (entity instanceof Place && !onMap((Place) entity)) {
 			u = new ComPlace(this, (Place) entity);
+		} else if (entity instanceof Work && !onMap((Work) entity)) {
+			u = new ComWork(this, (Work) entity);
 		} else if (!onMap(entity)) {
 			u = new Unit(this, entity);
 		} else {
@@ -479,6 +524,17 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 		pos.setLeft((float) left, UNITS_PIXELS);
 		pos.setTop((float) top, UNITS_PIXELS);
 		savePosition(entity, left, top);
+		
+		if (entity instanceof Work) {
+			Work w = (Work) entity;
+			ComWork c = (ComWork) u;
+			for (Squad s : w.getSquads()) {
+				if (!onMap(s)) c.addUnit(new Unit(this, s));
+			}
+			for (Vehicle v : w.getVehicles()) {
+				if (!onMap(v)) c.addUnit(new Unit(this, v));
+			}
+		}
 	}
 	
 	/**
@@ -501,6 +557,9 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 		} else if (obj instanceof Place) {
 			((Place) obj).setLeft(left);
 			((Place) obj).setTop(top);
+		} else if (obj instanceof Work) {
+			((Work) obj).setLeft(left);
+			((Work) obj).setTop(top);
 		}
 	}
 	
@@ -508,11 +567,13 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 	 * Checks, whether the given squad is already on the map.
 	 * 
 	 * @param  squad The squad
-	 * @return       If the squad is already on the map.
+	 * @return       If the squad is already on the map
 	 */
 	public boolean onMap(Squad squad) {
 		List<Place> lst = DBManager.getCommunicator().list(Place.class);
 		for (Place p : lst) if (p.getSquads().contains(squad)) return true;
+		List<Work> lstW = DBManager.getCommunicator().list(Work.class);
+		for (Work w : lstW) if (w.getSquads().contains(squad)) return true;
 		return (squad.getTop() != null && squad.getLeft() != null); 
 	}
 	
@@ -520,11 +581,13 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 	 * Checks, whether the given vehicle is already on the map.
 	 * 
 	 * @param  vehicle The vehicle
-	 * @return         If the vehicle is already on the map.
+	 * @return         If the vehicle is already on the map
 	 */
 	public boolean onMap(Vehicle vehicle) {
 		List<Place> lst = DBManager.getCommunicator().list(Place.class);
 		for (Place p : lst) if (p.getVehicles().contains(vehicle)) return true;
+		List<Work> lstW = DBManager.getCommunicator().list(Work.class);
+		for (Work w : lstW) if (w.getVehicles().contains(vehicle)) return true;
 		return (vehicle.getTop() != null && vehicle.getLeft() != null);
 	}
 	
@@ -532,7 +595,7 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 	 * Checks, whether the given helper is already on the map.
 	 * 
 	 * @param  helper The helper
-	 * @return        If the helper is already on the map.
+	 * @return        If the helper is already on the map
 	 */
 	public boolean onMap(Helper helper) {
 		List<Place> lst = DBManager.getCommunicator().list(Place.class);
@@ -544,7 +607,7 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 	 * Checks, whether the given place is already on the map.
 	 * 
 	 * @param  place The place
-	 * @return       If the place is already on the map.
+	 * @return       If the place is already on the map
 	 */
 	public boolean onMap(Place place) {
 		return (place.getTop() != null && place.getLeft() != null);
@@ -554,14 +617,25 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 	 * Checks, whether the given object is already on the map.
 	 * 
 	 * @param  obj The object
-	 * @return     If the object is already on the map.
+	 * @return     If the object is already on the map
 	 */
 	public boolean onMap(Object obj) {
 		if (obj instanceof Squad   && onMap((Squad) obj))   return true;
 		if (obj instanceof Vehicle && onMap((Vehicle) obj)) return true;
 		if (obj instanceof Helper  && onMap((Helper) obj))  return true;
 		if (obj instanceof Place   && onMap((Place) obj))   return true;
+		if (obj instanceof Work    && onMap((Work) obj))    return true;
 		return false;
+	}
+	
+	/**
+	 * Checks, whether the given work is already on the map.
+	 * 
+	 * @param  work The work
+	 * @return      If the work is already on the map
+	 */
+	public boolean onMap(Work work) {
+		return (work.getTop() != null && work.getLeft() != null);
 	}
 
 	/**
@@ -610,6 +684,15 @@ public class TabMap extends Tab implements Receiver, FailedListener,
 				if (vehicle.equals(o)) u.setState(state);
 			}
 		}
+	}
+	
+	/**
+	 * Gets the main layout.
+	 * 
+	 * @return The main layout.
+	 */
+	public MainLayout getMainLayout() {
+		return layout;
 	}
 
 }

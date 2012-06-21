@@ -32,4 +32,6 @@
     <inherits name="fi.jasoft.dragdroplayouts.DragDropLayoutsWidgetSet" />
 
     <inherits name="com.github.wolfie.refresher.RefresherApplicationWidgetset" />
+
+    <inherits name="org.vaadin.risto.stepper.widgetset.StepperWidgetset" />
 </module>

@@ -1,7 +1,5 @@
 package de.gianfelice.aeskulab.ui.tabs.map;
 
-import java.util.ArrayList;
-
 import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptAll;
@@ -13,8 +11,11 @@ import de.gianfelice.aeskulab.data.entities.Helper;
 import de.gianfelice.aeskulab.data.entities.Place;
 import de.gianfelice.aeskulab.data.entities.Squad;
 import de.gianfelice.aeskulab.data.entities.Vehicle;
+import de.gianfelice.aeskulab.data.entities.Work;
 import de.gianfelice.aeskulab.ui.components.ComPlace;
 import de.gianfelice.aeskulab.ui.components.ComPlace.DDGrid;
+import de.gianfelice.aeskulab.ui.components.ComWork;
+import de.gianfelice.aeskulab.ui.components.ComWork.DDGridW;
 import de.gianfelice.aeskulab.ui.components.Unit;
 
 import fi.jasoft.dragdroplayouts.events.LayoutBoundTransferable;
@@ -23,7 +24,7 @@ import fi.jasoft.dragdroplayouts.events.LayoutBoundTransferable;
  * A {@link DropHandler} that removes the dropped items from their source.
  * 
  * @author  Matthias Gianfelice
- * @version 0.1.0
+ * @version 0.2.0
  */
 public class RemoveHandler implements DropHandler {
 
@@ -44,7 +45,8 @@ public class RemoveHandler implements DropHandler {
 		Component com = trans.getComponent();
 		Component source = trans.getSourceComponent();
 		if (!(source instanceof ComponentContainer)) return;
-		if (!(com instanceof Unit || com instanceof ComPlace)) return;
+		if (!(com instanceof Unit || com instanceof ComPlace
+				|| com instanceof ComWork)) return;
 		((ComponentContainer) source).removeComponent(com);
 		
 		if (source instanceof DDGrid) {
@@ -60,6 +62,19 @@ public class RemoveHandler implements DropHandler {
 				p.removeVehicle((Vehicle) o);
 			} else if (o instanceof Helper) {
 				p.removeHelper((Helper) o);
+			}
+		
+		} else if (source instanceof DDGridW) {
+			
+			// Out of ComWork?
+			DDGridW grid = (DDGridW) source;
+			grid.recalculateLayout();
+			Work w = grid.getWork();
+			Object o = ((Unit) com).getEntity();
+			if (o instanceof Squad) {
+				w.removeSquad((Squad) o);
+			} else if (o instanceof Vehicle) {
+				w.removeVehicle((Vehicle) o);
 			}
 			
 		} else if (com instanceof Unit) {
@@ -81,12 +96,15 @@ public class RemoveHandler implements DropHandler {
 			
 			// A ComPlace itself?
 			Place p = ((ComPlace) com).getPlace();
-			p.setSquads(new ArrayList<Squad>());
-			p.setVehicles(new ArrayList<Vehicle>());
-			p.setHelpers(new ArrayList<Helper>());
-			p.setLeft(null);
-			p.setTop(null);
+			p.remove();
 
+		} else if (com instanceof ComWork) {
+			
+			// A ComWork itself?
+			Work w = ((ComWork) com).getWork();
+			w.setLeft(null);
+			w.setTop(null);
+			
 		}
 
 	}

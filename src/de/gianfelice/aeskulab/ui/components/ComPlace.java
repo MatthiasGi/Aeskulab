@@ -16,7 +16,6 @@ import com.vaadin.terminal.FileResource;
 import com.vaadin.terminal.Resource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.Embedded;
 import com.vaadin.ui.HorizontalLayout;
@@ -28,6 +27,7 @@ import de.gianfelice.aeskulab.data.entities.Helper;
 import de.gianfelice.aeskulab.data.entities.Place;
 import de.gianfelice.aeskulab.data.entities.Squad;
 import de.gianfelice.aeskulab.data.entities.Vehicle;
+import de.gianfelice.aeskulab.ui.components.ComWork.DDGridW;
 import de.gianfelice.aeskulab.ui.tabs.TabMap;
 
 import fi.jasoft.dragdroplayouts.DDGridLayout;
@@ -38,7 +38,7 @@ import fi.jasoft.dragdroplayouts.events.LayoutBoundTransferable;
  * A component for D&D purposes to represent a place.
  * 
  * @author  Matthias Gianfelice
- * @version 0.1.0
+ * @version 0.2.0
  * @see     Place
  */
 public class ComPlace extends CustomComponent implements DropHandler,
@@ -130,10 +130,41 @@ public class ComPlace extends CustomComponent implements DropHandler,
 			
 		} else if (com instanceof Unit) {
 			
-			// Map / ComPlace -> ComPlace
+			// Map / ComPlace / ComWork -> ComPlace
 			u = (Unit) com;
-			((ComponentContainer) tran.getSourceComponent()).removeComponent(u);
+			Component source = tran.getSourceComponent();
 			Object o = u.getEntity();
+			if (source instanceof DDGrid) {
+				DDGrid grid = (DDGrid) source;
+				if (o instanceof Helper) {
+					grid.getPlace().removeHelper((Helper) o);
+					grid.removeComponent(u);
+					grid.recalculateLayout();
+				} else if (o instanceof Squad) {
+					grid.getPlace().removeSquad((Squad) o);
+					grid.removeComponent(u);
+					grid.recalculateLayout();
+				} else if (o instanceof Vehicle) {
+					grid.getPlace().removeVehicle((Vehicle) o);
+					grid.removeComponent(u);
+					grid.recalculateLayout();
+				} else {
+					return;
+				}
+			} else if (source instanceof DDGridW) {
+				DDGridW grid = (DDGridW) source;
+				if (o instanceof Squad) {
+					grid.getWork().removeSquad((Squad) o);
+					grid.removeComponent(u);
+					grid.recalculateLayout();
+				} else if (o instanceof Vehicle) {
+					grid.getWork().removeVehicle((Vehicle) o);
+					grid.removeComponent(u);
+					grid.recalculateLayout();
+				} else {
+					return;
+				}
+			}
 			tab.savePosition(o, null, null);
 			addObject(o);
 			
@@ -196,28 +227,40 @@ public class ComPlace extends CustomComponent implements DropHandler,
 	 */
 	@Override
 	public void layoutClick(LayoutClickEvent event) {
-		HorizontalLayout horLayout = new HorizontalLayout();
-		horLayout.setMargin(true);
-		horLayout.setSpacing(true);
-		
-		Embedded emb = new Embedded();
-		emb.setWidth("150px");
-		File img = place.getImage();
-		Resource res;
-		if (img == null) {
-			res = new ClassResource("res/150/transformer.png",
-					getApplication());
+		if (event.isAltKey()) {
+			grid.setVisible(!grid.isVisible());
 		} else {
-			res = new FileResource(img, getApplication());
+			HorizontalLayout horLayout = new HorizontalLayout();
+			horLayout.setMargin(true);
+			horLayout.setSpacing(true);
+			
+			Embedded emb = new Embedded();
+			emb.setWidth("150px");
+			File img = place.getImage();
+			Resource res;
+			if (img == null) {
+				res = new ClassResource("res/150/transformer.png",
+						getApplication());
+			} else {
+				res = new FileResource(img, getApplication());
+			}
+			emb.setSource(res);
+			horLayout.addComponent(emb);
+			
+			VerticalLayout verLayout = new VerticalLayout();
+			horLayout.addComponent(verLayout);
+			
+			Label lblName = new Label(place.getName());
+			lblName.setStyleName(Reindeer.LABEL_H1);
+			verLayout.addComponent(lblName);
+			
+			Label lblInfo = new Label(
+					"Alt-Taste beim Klicken zum Verstecken halten.");
+			lblInfo.setStyleName(Reindeer.LABEL_SMALL);
+			verLayout.addComponent(lblInfo);
+			
+			tab.showWindow(horLayout, event.getClientX(), event.getClientY());
 		}
-		emb.setSource(res);
-		horLayout.addComponent(emb);
-		
-		Label lblName = new Label(place.getName());
-		lblName.setStyleName(Reindeer.LABEL_H1);
-		horLayout.addComponent(lblName);
-		
-		tab.showWindow(horLayout, event.getClientX(), event.getClientY());
 	}
 
 	

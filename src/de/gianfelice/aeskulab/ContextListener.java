@@ -23,8 +23,7 @@ public class ContextListener implements ServletContextListener {
 	/**
 	 * {@inheritDoc}
 	 */
-	public void contextInitialized(ServletContextEvent arg0) {
-		
+	public void contextInitialized(ServletContextEvent arg0) {		
 		try {
 			DBManager.registerCommunicator("mysql", true);
 		} catch (Exception e) {

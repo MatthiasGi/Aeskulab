@@ -16,7 +16,7 @@ import de.gianfelice.aeskulab.system.persistence.PersistentObject;
  * An entity to group {@link Helper} objects inside a squad.
  * 
  * @author  Matthias Gianfelice
- * @version 0.2.0
+ * @version 0.3.0
  * @see     Helper
  */
 @Entity
@@ -67,6 +67,7 @@ public class Squad extends PersistentObject {
 	public Squad(String name, SquadType type) {
 		this.name = name;
 		this.type = type;
+		this.state = 6;
 		store();
 	}
 
@@ -86,7 +87,10 @@ public class Squad extends PersistentObject {
 	 * @param state The new state
 	 */
 	public void setState(int state) {
+		if (this.state == state) return;
 		this.state = state;
+		new Log("Trupp " + name + " (" + Log.getHelpers(this) + ") meldet S" +
+				state);
 		store();
 	}
 
@@ -105,6 +109,9 @@ public class Squad extends PersistentObject {
 	 * @param name The new name
 	 */
 	public void setName(String name) {
+		if (this.name.equals(name)) return;
+		new Log("Trupp " + this.name + " (" + Log.getHelpers(this) +
+				") ist nun unter " + name + " erreichbar.");
 		this.name = name;
 		store();
 	}
@@ -124,7 +131,10 @@ public class Squad extends PersistentObject {
 	 * @param type The new type
 	 */
 	public void setType(SquadType type) {
+		if (this.type.getName().equals(type.getName())) return;
 		this.type = type;
+		new Log("Trupp " + name + " (" + Log.getHelpers(this) +
+				") ist nun vom Typ " + type.getName() + ".");
 		store();
 	}
 	
@@ -135,7 +145,12 @@ public class Squad extends PersistentObject {
 	 */
 	public void addHelper(Helper helper) {
 		if (helper == null || helpers.contains(helper)) return;
-		if (helpers.add(helper)) store();
+		if (helpers.add(helper)) {
+			new Log("Trupp " + name + " wurde um " + helper.getFirstName() +
+					" " + helper.getLastName() +
+					" erweitert. Neue Besatzung: " + Log.getHelpers(this));
+			store();
+		}
 	}
 	
 	/**
@@ -144,7 +159,12 @@ public class Squad extends PersistentObject {
 	 * @param helper The helper
 	 */
 	public void removeHelper(Helper helper) {
-		if (helpers.remove(helper)) store();
+		if (helpers.remove(helper)) {
+			new Log(helper.getFirstName() + " " + helper.getLastName() +
+					" wurde aus Trupp " + name + " entfernt. Neue Besatzung: " +
+					Log.getHelpers(this));
+			store();
+		}
 	}
 	
 	/**
@@ -163,6 +183,8 @@ public class Squad extends PersistentObject {
 	 */
 	public void setHelpers(List<Helper> helpers) {
 		this.helpers = helpers;
+		new Log("Besatzung des Trupps " + name + " wurde verändert: " +
+				Log.getHelpers(this));
 		store();
 	}
 	

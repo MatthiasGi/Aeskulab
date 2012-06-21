@@ -23,7 +23,7 @@ import de.gianfelice.aeskulab.ui.tabs.map.WinVehicle;
  * A component for D&D purposes to represent a place.
  * 
  * @author  Matthias Gianfelice
- * @version 0.1.0
+ * @version 0.2.0
  * @see     Squad
  * @see     Vehicle
  * @see     Helper

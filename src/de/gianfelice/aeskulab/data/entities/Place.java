@@ -1,6 +1,7 @@
 package de.gianfelice.aeskulab.data.entities;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -16,7 +17,7 @@ import de.gianfelice.aeskulab.system.utils.FileUtil;
  * Remarkable places, e.g. treatment tent.
  * 
  * @author  Matthias Gianfelice
- * @version 0.2.0
+ * @version 0.3.0
  */
 @Entity
 @Table(name = "place")
@@ -99,7 +100,11 @@ public class Place extends PersistentObject {
 	 */
 	public void addHelper(Helper helper) {
 		if (helper == null || helpers.contains(helper)) return;
-		if (helpers.add(helper)) store();
+		if (helpers.add(helper)) {
+			new Log("Helfer " + helper.getFirstName() + " " +
+					helper.getLastName() + " ist in " + name + " engetroffen.");
+			store();
+		}
 	}
 	
 	/**
@@ -108,7 +113,11 @@ public class Place extends PersistentObject {
 	 * @param helper The helper
 	 */
 	public void removeHelper(Helper helper) {
-		if (helpers.remove(helper)) store();
+		if (helpers.remove(helper)) {
+			new Log("Helfer " + helper.getFirstName() + " " +
+					helper.getLastName() + " hat " + name + " verlassen.");
+			store();
+		}
 	}
 	
 	/**
@@ -127,7 +136,12 @@ public class Place extends PersistentObject {
 	 */
 	public void addVehicle(Vehicle vehicle) {
 		if (vehicle == null || vehicles.contains(vehicle)) return;
-		if (vehicles.add(vehicle)) store();
+		if (vehicles.add(vehicle)) {
+			new Log("Fahrzeug " + vehicle.getName() + " (" +
+					Log.getHelpers(vehicle) + ") ist in " + name +
+					" eingetroffen.");
+			store();
+		}
 	}
 	
 	/**
@@ -136,7 +150,11 @@ public class Place extends PersistentObject {
 	 * @param vehicle The vehicle
 	 */
 	public void removeVehicle(Vehicle vehicle) {
-		if (vehicles.remove(vehicle)) store();
+		if (vehicles.remove(vehicle)) {
+			new Log("Fahrzeug " + vehicle.getName() + " (" +
+					Log.getHelpers(vehicle) + ") hat " + name + " verlassen.");
+			store();
+		}
 	}
 	
 	/**
@@ -146,7 +164,11 @@ public class Place extends PersistentObject {
 	 */
 	public void addSquad(Squad squad) {
 		if (squad == null || squads.contains(squad)) return;
-		if (squads.add(squad)) store();
+		if (squads.add(squad)) {
+			new Log("Trupp " + squad.getName() + " (" + Log.getHelpers(squad) +
+					") ist in " + name + " eingetroffen.");
+			store();
+		}
 	}
 	
 	/**
@@ -155,7 +177,11 @@ public class Place extends PersistentObject {
 	 * @param squad The squad
 	 */
 	public void removeSquad(Squad squad) {
-		if (squads.remove(squad)) store();
+		if (squads.remove(squad)) {
+			new Log("Trupp " + squad.getName() + " (" + Log.getHelpers(squad) +
+					") hat " + name + " verlassen.");
+			store();
+		}
 	}
 	
 	/**
@@ -203,33 +229,15 @@ public class Place extends PersistentObject {
 	}
 
 	/**
-	 * Sets the vehicles.
-	 * 
-	 * @param vehicles The new vehicles
+	 * Removes all entities from this place.
 	 */
-	public void setVehicles(List<Vehicle> vehicles) {
-		this.vehicles = vehicles;
-		store();
-	}
-
-	/**
-	 * Sets the squads.
-	 * 
-	 * @param squads The new squads
-	 */
-	public void setSquads(List<Squad> squads) {
-		this.squads = squads;
-		store();
-	}
-
-	/**
-	 * Sets the helpers.
-	 * 
-	 * @param helpers The new helpers
-	 */
-	public void setHelpers(List<Helper> helpers) {
-		this.helpers = helpers;
-		store();
+	public void remove() {
+		helpers = new ArrayList<Helper>();
+		vehicles = new ArrayList<Vehicle>();
+		squads = new ArrayList<Squad>();
+		leftPos = 0;
+		topPos = 0;
+		new Log(name + " wurde aufgelöst.");
 	}
 
 	/**

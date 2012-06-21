@@ -98,7 +98,7 @@ public class TabUnits extends Tab implements DropHandler {
 		VerticalLayout verLayout = new VerticalLayout();
 		verLayout.setSizeFull();
 		horSplit.addComponent(verLayout);
-		verLayout.addComponent(new ToolBar(this));
+		verLayout.addComponent(new ToolBar(this));		
 		sidebar = new Panel();
 		sidebar.setStyleName(Reindeer.PANEL_LIGHT);
 		horSplit.addComponent(sidebar);
@@ -442,7 +442,7 @@ public class TabUnits extends Tab implements DropHandler {
 				}
 				veh.setHelpers(new ArrayList<Helper>());
 			}
-			
+
 		}
 	}
 

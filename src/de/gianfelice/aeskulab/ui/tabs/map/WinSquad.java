@@ -8,6 +8,7 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.FileResource;
+import com.vaadin.ui.Audio;
 import com.vaadin.ui.Embedded;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -25,7 +26,7 @@ import de.gianfelice.aeskulab.ui.tabs.TabMap;
  * A popup window to display information about a squad.
  * 
  * @author  Matthias Gianfelice
- * @version 0.1.0
+ * @version 0.1.1
  * @see     Squad
  */
 public class WinSquad extends HorizontalLayout implements ValueChangeListener {
@@ -48,6 +49,9 @@ public class WinSquad extends HorizontalLayout implements ValueChangeListener {
 	
 	/** A slider to set the state of the squad. */
 	private Slider state;
+	
+	/** An audio component. */
+	private Audio audio;
 	
 	// ----------------------------- Constructor(s) ----------------------------
 	/**
@@ -88,6 +92,11 @@ public class WinSquad extends HorizontalLayout implements ValueChangeListener {
 			state.setValue(squad.getState());
 		} catch (Exception e) {}
 		addComponent(state);
+		
+		audio = new Audio();
+		addComponent(audio);
+		audio.setWidth("0px");
+		audio.setHeight("0px");
 	}
 	
 	// ------------------------------- Method(s) -------------------------------
@@ -99,6 +108,7 @@ public class WinSquad extends HorizontalLayout implements ValueChangeListener {
 		super.attach();
 		Application app = getApplication();
 		emb.setSource(new ClassResource("res/tac/trupp.png", app));
+		audio.setSource(new ClassResource("res/alarm.mp3", app));
 		
 		List<Helper> lst = squad.getHelpers();
 		for (Helper h : lst) {
@@ -147,6 +157,7 @@ public class WinSquad extends HorizontalLayout implements ValueChangeListener {
 		int state = ((Double) this.state.getValue()).intValue();
 		squad.setState(state);
 		tab.updateState(squad, state);
+		if (state == 0) audio.play();
 	}
 	
 }

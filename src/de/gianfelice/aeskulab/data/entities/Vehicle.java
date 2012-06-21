@@ -18,7 +18,7 @@ import de.gianfelice.aeskulab.system.utils.FileUtil;
  * An entity to store vehicles.
  * 
  * @author  Matthias Gianfelice
- * @version 0.3.0
+ * @version 0.4.0
  */
 @Entity
 @Table(name = "vehicle")
@@ -69,6 +69,7 @@ public class Vehicle extends PersistentObject {
 	 */
 	public Vehicle(String name) {
 		this.name = name;
+		this.state = 6;
 	}
 
 	// ------------------------------- Method(s) -------------------------------
@@ -119,7 +120,10 @@ public class Vehicle extends PersistentObject {
 	 * @param state The new state
 	 */
 	public void setState(int state) {
+		if (this.state == state) return;
 		this.state = state;
+		new Log("Fahrzeug " + name + " (" + Log.getHelpers(this) +
+				") meldet S" + state);
 		store();
 	}
 
@@ -138,6 +142,9 @@ public class Vehicle extends PersistentObject {
 	 * @param name The new name
 	 */
 	public void setName(String name) {
+		if (this.name.equals(name)) return;
+		new Log("Fahrzeug " + this.name + " (" + Log.getHelpers(this) +
+				") ist nun unter " + name + " erreichbar.");
 		this.name = name;
 		store();
 	}
@@ -157,7 +164,10 @@ public class Vehicle extends PersistentObject {
 	 * @param type The new type
 	 */
 	public void setType(SquadType type) {
+		if (this.type.getName().equals(type.getName())) return;
 		this.type = type;
+		new Log("Fahrzeug " + name + " (" + Log.getHelpers(this) +
+				") hat nun eine Besatzung vom Typ " + type.getName() + ".");		
 		store();
 	}
 	
@@ -168,7 +178,12 @@ public class Vehicle extends PersistentObject {
 	 */
 	public void addHelper(Helper helper) {
 		if (helper == null || helpers.contains(helper)) return;
-		if (helpers.add(helper)) store();
+		if (helpers.add(helper)) {
+			new Log("Fahrzeug " + name + " wurde um " + helper.getFirstName() +
+					" " + helper.getLastName() +
+					" verstärkt. Neue Besatzung: " + Log.getHelpers(this));
+			store();
+		}
 	}
 	
 	/**
@@ -177,7 +192,12 @@ public class Vehicle extends PersistentObject {
 	 * @param helper The helper
 	 */
 	public void removeHelper(Helper helper) {
-		if (helpers.remove(helper)) store();
+		if (helpers.remove(helper)) {
+			new Log(helper.getFirstName() + " " + helper.getLastName() +
+					" wurde aus Fahrzeug " + name +
+					" entfernt. Neue Besatzung: " + Log.getHelpers(this));
+			store();
+		}
 	}
 	
 	/**
@@ -196,6 +216,8 @@ public class Vehicle extends PersistentObject {
 	 */
 	public void setHelpers(List<Helper> helpers) {
 		this.helpers = helpers;
+		new Log("Besatzung des Fahrzeugs " + name + " wurde verändert: " +
+				Log.getHelpers(this));
 		store();
 	}
 	

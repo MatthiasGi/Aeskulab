@@ -19,7 +19,9 @@ import de.gianfelice.aeskulab.data.entities.Helper;
 import de.gianfelice.aeskulab.data.entities.Place;
 import de.gianfelice.aeskulab.data.entities.Squad;
 import de.gianfelice.aeskulab.data.entities.Vehicle;
+import de.gianfelice.aeskulab.data.entities.Work;
 import de.gianfelice.aeskulab.ui.tabs.TabMap;
+import de.gianfelice.aeskulab.ui.tabs.TabWork;
 import de.gianfelice.aeskulab.ui.tabs.map.WinHelper;
 import de.gianfelice.aeskulab.ui.tabs.map.WinSquad;
 import de.gianfelice.aeskulab.ui.tabs.map.WinVehicle;
@@ -28,11 +30,12 @@ import de.gianfelice.aeskulab.ui.tabs.map.WinVehicle;
  * A component for D&D purposes to represent a unit inside a list.
  * 
  * @author  Matthias Gianfelice
- * @version 0.1.0
+ * @version 0.2.0
  * @see     Squad
  * @see     Vehicle
  * @see     Helper
  * @see     Place
+ * @see     Work
  */
 public class UnitList extends CustomComponent implements LayoutClickListener {
 
@@ -187,6 +190,8 @@ public class UnitList extends CustomComponent implements LayoutClickListener {
 			horLayout.addComponent(lblName);
 			
 			tab.showWindow(horLayout, event.getClientX(), event.getClientY());
+		} else if (entity instanceof Work) {
+			tab.getMainLayout().setContentTab(new TabWork((Work) entity));
 		}
 	}
 
